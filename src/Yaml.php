@@ -2,16 +2,23 @@
 
 namespace BurningDiode\Slim\Config;
 
-use Slim\Slim;
 use Symfony\Component\Yaml\Yaml as YamlParser;
 use BurningDiode\Slim\Config\ParameterBag;
 
 class Yaml
 {
 	protected static $instance;
-	protected static $slim;
+	protected $config = array();
 	protected static $parameters = array();
 	protected static $global_parameters = array();
+
+	/**
+	 * Yaml constructor.
+	 */
+	public function __construct()
+	{
+		$this->config = new ParameterBag();
+	}
 
 	/**
 	 * Parse .yml file and add it to slim
@@ -125,12 +132,7 @@ class Yaml
 
 			$value = $parameterBag->unescapeValue($parameterBag->resolveValue($value));
 
-			if (is_array($value) && !is_numeric($key)) {
-				$key = array($key => $value);
-				$value = true;
-			}
-
-			self::$slim->config($key, $value);
+			$this->config->set($key, $value);
 		}
 	}
 
@@ -163,8 +165,7 @@ class Yaml
 
 		if (isset($content['parameters'])) {
 			$parameters = array_merge($content['parameters'], $parameters);
-
-			unset($content['parameters']);
+			$content['parameters'] = $parameters;
 		}
 
 		self::$parameters[$resource]->add($parameters);
@@ -173,10 +174,24 @@ class Yaml
 		return $content;
 	}
 
-	private function __construct() {
-		self::$slim = Slim::getInstance();
-	} 
+	/**
+	 * Get a value from the config ParameterBag
+	 * @param $key
+	 * @return mixed
+	 */
+	public function get($key)
+	{
+		return $this->config->get($key);
+	}
 
-	private function __clone(){} 
-	private function __wakeup(){}
+	/**
+	 * Test if a key from the config ParameterBag exists
+	 *
+	 * @param $key
+	 * @return bool
+	 */
+	public function has($key)
+	{
+		return $this->config->has($key);
+	}
 }
